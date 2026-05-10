@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "80893100502",
+    "project_id": "marquee-pass",
+    "storage_bucket": "marquee-pass.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80893100502:android:43f8cb657def004ad06477",
+        "android_client_info": {
+          "package_name": "com.thisisnotajoke.marqueepass"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbKW5zY1dh_ecVw4EDl2jEpChHy_cD__A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
