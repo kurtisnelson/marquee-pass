@@ -32,26 +32,48 @@ class FirebaseSyncManager {
     private val auth = FirebaseAuth.getInstance()
     private val database = getDatabase()
     
-    private val showsRef = database.getReference("users").apply {
-        keepSynced(true)
-    }
+    private val usersRef = database.getReference("users")
+    
+    private val syncedUsers = mutableSetOf<String>()
 
     private val _currentUserState = MutableStateFlow<FirebaseUser?>(auth.currentUser)
     val currentUserState: StateFlow<FirebaseUser?> = _currentUserState.asStateFlow()
 
     init {
         auth.addAuthStateListener { firebaseAuth ->
-            _currentUserState.value = firebaseAuth.currentUser
+            val user = firebaseAuth.currentUser
+            _currentUserState.value = user
+            if (user != null) {
+                setupUserSync(user.uid)
+            }
+        }
+    }
+
+    private fun setupUserSync(uid: String) {
+        if (!syncedUsers.contains(uid)) {
+            try {
+                usersRef.child(uid).child("shows").keepSynced(true)
+                syncedUsers.add(uid)
+            } catch (e: Exception) {
+                Log.w("FirebaseSyncManager", "Could not keep shows synced for user $uid", e)
+            }
         }
     }
 
     suspend fun ensureAuthenticated(): String? {
         val currentUser = auth.currentUser
-        if (currentUser != null) return currentUser.uid
+        if (currentUser != null) {
+            setupUserSync(currentUser.uid)
+            return currentUser.uid
+        }
 
         return try {
             val result = auth.signInAnonymously().await()
-            result.user?.uid
+            val uid = result.user?.uid
+            if (uid != null) {
+                setupUserSync(uid)
+            }
+            uid
         } catch (e: Exception) {
             Log.e("FirebaseSyncManager", "Anonymous auth failed", e)
             null
@@ -61,7 +83,7 @@ class FirebaseSyncManager {
     suspend fun syncShow(show: Show) {
         val userId = ensureAuthenticated() ?: return
         try {
-            showsRef.child(userId).child("shows").child(show.id.toString()).setValue(show).await()
+            usersRef.child(userId).child("shows").child(show.id.toString()).setValue(show).await()
             Log.d("FirebaseSyncManager", "Synced show ${show.id} to Firebase")
         } catch (e: Exception) {
             Log.e("FirebaseSyncManager", "Failed to sync show ${show.id}", e)
@@ -71,7 +93,7 @@ class FirebaseSyncManager {
     suspend fun deleteShow(showId: Int) {
         val userId = ensureAuthenticated() ?: return
         try {
-            showsRef.child(userId).child("shows").child(showId.toString()).removeValue().await()
+            usersRef.child(userId).child("shows").child(showId.toString()).removeValue().await()
             Log.d("FirebaseSyncManager", "Deleted show $showId from Firebase")
         } catch (e: Exception) {
             Log.e("FirebaseSyncManager", "Failed to delete show $showId", e)
@@ -81,7 +103,7 @@ class FirebaseSyncManager {
     suspend fun fetchAllShows(): List<Show> {
         val userId = ensureAuthenticated() ?: return emptyList()
         return try {
-            val snapshot = showsRef.child(userId).child("shows").get().await()
+            val snapshot = usersRef.child(userId).child("shows").get().await()
             snapshot.children.mapNotNull { it.getValue(Show::class.java) }
         } catch (e: Exception) {
             Log.e("FirebaseSyncManager", "Failed to fetch shows from Firebase", e)
@@ -92,17 +114,31 @@ class FirebaseSyncManager {
     suspend fun signInWithGoogle(idToken: String): FirebaseUser {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = auth.signInWithCredential(credential).await()
-        return result.user ?: throw Exception("Sign in failed - no user returned")
+        val user = result.user ?: throw Exception("Sign in failed - no user returned")
+        setupUserSync(user.uid)
+        return user
     }
 
     suspend fun linkWithGoogle(idToken: String): FirebaseUser {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val currentUser = auth.currentUser ?: throw Exception("No active guest account found to link to.")
         val result = currentUser.linkWithCredential(credential).await()
-        return result.user ?: throw Exception("Linking failed - no user returned")
+        val user = result.user ?: throw Exception("Linking failed - no user returned")
+        setupUserSync(user.uid)
+        return user
     }
 
     suspend fun signOut() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val uid = currentUser.uid
+            try {
+                usersRef.child(uid).child("shows").keepSynced(false)
+            } catch (e: Exception) {
+                // Ignore
+            }
+            syncedUsers.remove(uid)
+        }
         auth.signOut()
         ensureAuthenticated()
     }

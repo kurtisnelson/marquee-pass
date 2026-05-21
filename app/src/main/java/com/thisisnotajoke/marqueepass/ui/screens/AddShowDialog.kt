@@ -5,11 +5,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Star
 import com.thisisnotajoke.marqueepass.data.Show
 import com.thisisnotajoke.marqueepass.data.ShowStatus
 import java.util.Calendar
@@ -96,17 +99,63 @@ fun AddShowDialog(
 
                 if (status == ShowStatus.SEEN) {
                     Text("Rating", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
-                    Slider(
-                        value = rating.toFloat(),
-                        onValueChange = { rating = it.toInt() },
-                        valueRange = 0f..5f,
-                        steps = 4,
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.tertiary,
-                            activeTrackColor = MaterialTheme.colorScheme.tertiary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)
-                        )
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            for (i in 1..5) {
+                                val isFilled = i <= rating
+                                IconButton(
+                                    onClick = {
+                                        rating = i
+                                    },
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Star,
+                                        contentDescription = "$i Stars",
+                                        tint = if (isFilled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (rating == 0) "No Rating" else "$rating Star${if (rating > 1) "s" else ""}",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            
+                            if (rating > 0) {
+                                TextButton(
+                                    onClick = { rating = 0 },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(32.dp),
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Clear Rating",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 OutlinedTextField(

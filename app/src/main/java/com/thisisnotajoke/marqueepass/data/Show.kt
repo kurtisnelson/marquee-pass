@@ -15,10 +15,10 @@ enum class ShowStatus {
 data class Show(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val title: String,
+    val title: String = "",
     val theater: String? = null,
     val date: Long? = null,
-    val status: ShowStatus,
+    val status: ShowStatus = ShowStatus.WANT_TO_SEE,
     val rating: Int? = null,
     val notes: String? = null
 )
