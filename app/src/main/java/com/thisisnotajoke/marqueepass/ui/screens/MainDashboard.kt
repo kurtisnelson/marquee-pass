@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.ConfirmationNumber
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -73,6 +74,17 @@ fun MainDashboard() {
                 },
                 icon = { Icon(Icons.Rounded.ConfirmationNumber, contentDescription = "Tickets") },
                 label = { Text("Tickets") }
+            )
+            item(
+                selected = currentRoute == Route.Profile,
+                onClick = {
+                    if (currentRoute != Route.Profile) {
+                        backStack.clear()
+                        backStack.add(Route.Profile)
+                    }
+                },
+                icon = { Icon(Icons.Rounded.AccountCircle, contentDescription = "Profile") },
+                label = { Text("Profile") }
             )
         }
     ) {

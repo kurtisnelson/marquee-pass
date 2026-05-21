@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Marquee Pass</string>
+    <string name="default_web_client_id" translatable="false">80893100502-jn6gtf9kgp1uumbqto6vpujsl7frft21.apps.googleusercontent.com</string>
 </resources>

@@ -27,4 +27,7 @@ interface ShowDao {
 
     @Delete
     suspend fun deleteShow(show: Show)
+
+    @Query("DELETE FROM shows")
+    suspend fun deleteAllShows()
 }

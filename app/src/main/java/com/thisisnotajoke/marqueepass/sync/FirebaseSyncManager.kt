@@ -2,8 +2,13 @@ package com.thisisnotajoke.marqueepass.sync
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.thisisnotajoke.marqueepass.data.Show
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 
 class FirebaseSyncManager {
@@ -29,6 +34,15 @@ class FirebaseSyncManager {
     
     private val showsRef = database.getReference("users").apply {
         keepSynced(true)
+    }
+
+    private val _currentUserState = MutableStateFlow<FirebaseUser?>(auth.currentUser)
+    val currentUserState: StateFlow<FirebaseUser?> = _currentUserState.asStateFlow()
+
+    init {
+        auth.addAuthStateListener { firebaseAuth ->
+            _currentUserState.value = firebaseAuth.currentUser
+        }
     }
 
     suspend fun ensureAuthenticated(): String? {
@@ -73,5 +87,23 @@ class FirebaseSyncManager {
             Log.e("FirebaseSyncManager", "Failed to fetch shows from Firebase", e)
             emptyList()
         }
+    }
+
+    suspend fun signInWithGoogle(idToken: String): FirebaseUser {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = auth.signInWithCredential(credential).await()
+        return result.user ?: throw Exception("Sign in failed - no user returned")
+    }
+
+    suspend fun linkWithGoogle(idToken: String): FirebaseUser {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val currentUser = auth.currentUser ?: throw Exception("No active guest account found to link to.")
+        val result = currentUser.linkWithCredential(credential).await()
+        return result.user ?: throw Exception("Linking failed - no user returned")
+    }
+
+    suspend fun signOut() {
+        auth.signOut()
+        ensureAuthenticated()
     }
 }

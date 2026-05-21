@@ -11,4 +11,7 @@ sealed interface Route {
     
     @Serializable
     data object Tickets : Route
+
+    @Serializable
+    data object Profile : Route
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import com.thisisnotajoke.marqueepass.ui.screens.SeenScreen
 import com.thisisnotajoke.marqueepass.ui.screens.WantToSeeScreen
 import com.thisisnotajoke.marqueepass.ui.screens.TicketsScreen
+import com.thisisnotajoke.marqueepass.ui.screens.ProfileScreen
 
 @Composable
 fun MarqueeNavGraph(backStack: SnapshotStateList<Route>) {
@@ -19,6 +20,7 @@ fun MarqueeNavGraph(backStack: SnapshotStateList<Route>) {
                 is Route.Seen -> NavEntry(key) { SeenScreen() }
                 is Route.WantToSee -> NavEntry(key) { WantToSeeScreen() }
                 is Route.Tickets -> NavEntry(key) { TicketsScreen() }
+                is Route.Profile -> NavEntry(key) { ProfileScreen() }
             }
         }
     )

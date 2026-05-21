@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "80893100502",
+    "firebase_url": "https://marquee-pass-default-rtdb.firebaseio.com",
     "project_id": "marquee-pass",
     "storage_bucket": "marquee-pass.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.thisisnotajoke.marqueepass"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "80893100502-jn6gtf9kgp1uumbqto6vpujsl7frft21.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbKW5zY1dh_ecVw4EDl2jEpChHy_cD__A"
@@ -20,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "80893100502-jn6gtf9kgp1uumbqto6vpujsl7frft21.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
