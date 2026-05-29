@@ -2,6 +2,7 @@
 /.antigravitycli
 /.agent
 .gradle
+.gradle-home
 /local.properties
 /.idea/caches
 /.idea/libraries
