@@ -7,7 +7,7 @@
         "shows": {
           ".validate": "newData.hasChildren() || !newData.exists()",
           "$showId": {
-            ".validate": "newData.hasChildren(['id', 'title', 'status'])",
+            ".validate": "!newData.exists() || newData.hasChildren(['id', 'title', 'status'])",
             "id": {
               ".validate": "newData.isNumber() && (newData.val() + '' == $showId)"
             },
