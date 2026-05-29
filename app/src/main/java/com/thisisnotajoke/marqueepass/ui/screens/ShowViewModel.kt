@@ -15,23 +15,41 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class ShowViewModel(application: Application) : AndroidViewModel(application) {
-    private val showDao = AppDatabase.getDatabase(application).showDao()
-    private val firebaseSync = FirebaseSyncManager
-    private val connectivityObserver = ConnectivityObserver(application)
+import androidx.lifecycle.ViewModel
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import com.thisisnotajoke.marqueepass.di.AppScope
+import com.thisisnotajoke.marqueepass.data.ShowDao
+
+@Inject
+@ContributesIntoMap(AppScope::class)
+@ViewModelKey(ShowViewModel::class)
+class ShowViewModel(
+    private val showDao: ShowDao,
+    private val firebaseSync: FirebaseSyncManager,
+    private val connectivityObserver: ConnectivityObserver
+) : ViewModel() {
 
     val currentUser: StateFlow<FirebaseUser?> = firebaseSync.currentUserState
+
+    val connectionStatus: StateFlow<ConnectivityStatus> = connectivityObserver.observe()
+        .stateIn(
+            scope = viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            initialValue = ConnectivityStatus.Available
+        )
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     val seenShows: Flow<List<Show>> = showDao.getShowsByStatus(ShowStatus.SEEN)
     val wantToSeeShows: Flow<List<Show>> = showDao.getShowsByStatus(ShowStatus.WANT_TO_SEE)
-    val ticketedShows: Flow<List<Show>> = showDao.getShowsByStatus(ShowStatus.TICKETED)
 
     init {
         // Monitor connectivity and trigger a full sync when network becomes available

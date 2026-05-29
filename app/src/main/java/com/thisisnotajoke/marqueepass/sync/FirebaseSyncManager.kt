@@ -11,8 +11,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 
-object FirebaseSyncManager {
-    private const val TAG = "FirebaseSyncManager"
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import com.thisisnotajoke.marqueepass.di.AppScope
+
+@SingleIn(AppScope::class)
+class FirebaseSyncManager @Inject constructor() {
+    companion object {
+        private const val TAG = "FirebaseSyncManager"
+    }
+
     private var isPersistenceEnabled = false
 
     private fun getDatabase(): FirebaseDatabase {

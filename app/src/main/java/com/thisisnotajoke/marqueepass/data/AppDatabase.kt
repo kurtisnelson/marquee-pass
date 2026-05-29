@@ -19,7 +19,7 @@ class Converters {
     }
 }
 
-@Database(entities = [Show::class], version = 2, exportSchema = false)
+@Database(entities = [Show::class], version = 2, exportSchema = true)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun showDao(): ShowDao

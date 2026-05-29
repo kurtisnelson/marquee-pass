@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -15,7 +16,7 @@ enum class ConnectivityStatus {
     Available, Unavailable, Losing, Lost
 }
 
-class ConnectivityObserver(context: Context) {
+class ConnectivityObserver @Inject constructor(private val context: Context) {
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 

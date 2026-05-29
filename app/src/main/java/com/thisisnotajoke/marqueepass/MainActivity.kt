@@ -7,13 +7,22 @@ import androidx.activity.enableEdgeToEdge
 import com.thisisnotajoke.marqueepass.ui.screens.MainDashboard
 import com.thisisnotajoke.marqueepass.ui.theme.MarqueePassTheme
 
+import androidx.compose.runtime.CompositionLocalProvider
+import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import com.thisisnotajoke.marqueepass.MarqueePassApplication
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val appGraph = (application as MarqueePassApplication).appGraph
         setContent {
-            MarqueePassTheme {
-                MainDashboard()
+            CompositionLocalProvider(
+                LocalMetroViewModelFactory provides appGraph.viewModelFactory
+            ) {
+                MarqueePassTheme {
+                    MainDashboard()
+                }
             }
         }
     }
