@@ -1,8 +1,11 @@
 package com.thisisnotajoke.marqueepass.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.ConfirmationNumber
@@ -37,6 +40,14 @@ fun MainDashboard() {
         }
     }
 
+    val ambientGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF13091C), // Deep midnight violet ambient glow
+            Color(0xFF070C15), // Smooth slate dark blue
+            Color(0xFF080808)  // Obsidian black base
+        )
+    )
+
     NavigationSuiteScaffold(
         layoutType = layoutType,
         containerColor = MaterialTheme.colorScheme.background,
@@ -64,17 +75,7 @@ fun MainDashboard() {
                 icon = { Icon(Icons.AutoMirrored.Rounded.List, contentDescription = "Want to See") },
                 label = { Text("Wishlist") }
             )
-            item(
-                selected = currentRoute == Route.Tickets,
-                onClick = {
-                    if (currentRoute != Route.Tickets) {
-                        backStack.clear()
-                        backStack.add(Route.Tickets)
-                    }
-                },
-                icon = { Icon(Icons.Rounded.ConfirmationNumber, contentDescription = "Tickets") },
-                label = { Text("Tickets") }
-            )
+
             item(
                 selected = currentRoute == Route.Profile,
                 onClick = {
@@ -90,9 +91,14 @@ fun MainDashboard() {
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = Color.Transparent
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(ambientGradient)
+                    .padding(innerPadding)
+            ) {
                 MarqueeNavGraph(
                     backStack = backStack
                 )

@@ -21,16 +21,17 @@ import java.util.Calendar
 @Composable
 fun AddShowDialog(
     status: ShowStatus,
+    initialShow: Show? = null,
     onDismiss: () -> Unit,
     onConfirm: (Show) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var theater by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var rating by remember { mutableStateOf(0) }
+    var title by remember { mutableStateOf(initialShow?.title ?: "") }
+    var theater by remember { mutableStateOf(initialShow?.theater ?: "") }
+    var notes by remember { mutableStateOf(initialShow?.notes ?: "") }
+    var rating by remember { mutableStateOf(initialShow?.rating ?: 0) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis()
+        initialSelectedDateMillis = initialShow?.date ?: System.currentTimeMillis()
     )
 
     Dialog(onDismissRequest = onDismiss) {
@@ -47,7 +48,7 @@ fun AddShowDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Add Show",
+                    text = if (initialShow == null) "Add Show" else "Edit Show",
                     style = MaterialTheme.typography.displaySmall.copy(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
@@ -97,7 +98,7 @@ fun AddShowDialog(
                     )
                 }
 
-                if (status == ShowStatus.SEEN) {
+                if ((initialShow?.status ?: status) == ShowStatus.SEEN) {
                     Text("Rating", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.tertiary)
                     Column(
                         modifier = Modifier
@@ -185,11 +186,12 @@ fun AddShowDialog(
                             if (title.isNotBlank()) {
                                 onConfirm(
                                     Show(
+                                        id = initialShow?.id ?: 0,
                                         title = title,
                                         theater = theater,
                                         date = datePickerState.selectedDateMillis,
-                                        status = status,
-                                        rating = if (status == ShowStatus.SEEN) rating else null,
+                                        status = initialShow?.status ?: status,
+                                        rating = if ((initialShow?.status ?: status) == ShowStatus.SEEN) rating else null,
                                         notes = notes
                                     )
                                 )

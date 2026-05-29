@@ -17,7 +17,8 @@ fun SeenScreen(viewModel: ShowViewModel = viewModel()) {
         isRefreshing = isRefreshing,
         onRefresh = { viewModel.refresh() },
         onAddShow = { viewModel.addShow(it) },
-        onDeleteShow = { viewModel.deleteShow(it) }
+        onDeleteShow = { viewModel.deleteShow(it) },
+        onUpdateShow = { viewModel.updateShow(it) }
     )
 }
 
@@ -32,21 +33,8 @@ fun WantToSeeScreen(viewModel: ShowViewModel = viewModel()) {
         isRefreshing = isRefreshing,
         onRefresh = { viewModel.refresh() },
         onAddShow = { viewModel.addShow(it) },
-        onDeleteShow = { viewModel.deleteShow(it) }
+        onDeleteShow = { viewModel.deleteShow(it) },
+        onUpdateShow = { viewModel.updateShow(it) }
     )
 }
 
-@Composable
-fun TicketsScreen(viewModel: ShowViewModel = viewModel()) {
-    val shows by viewModel.ticketedShows.collectAsState(initial = emptyList())
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
-    ShowListScreen(
-        title = "MY TICKETS",
-        shows = shows,
-        status = ShowStatus.TICKETED,
-        isRefreshing = isRefreshing,
-        onRefresh = { viewModel.refresh() },
-        onAddShow = { viewModel.addShow(it) },
-        onDeleteShow = { viewModel.deleteShow(it) }
-    )
-}
