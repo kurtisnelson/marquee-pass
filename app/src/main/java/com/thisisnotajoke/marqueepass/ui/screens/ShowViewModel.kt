@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 class ShowViewModel(application: Application) : AndroidViewModel(application) {
     private val showDao = AppDatabase.getDatabase(application).showDao()
-    private val firebaseSync = FirebaseSyncManager()
+    private val firebaseSync = FirebaseSyncManager
     private val connectivityObserver = ConnectivityObserver(application)
 
     val currentUser: StateFlow<FirebaseUser?> = firebaseSync.currentUserState
@@ -59,20 +59,22 @@ class ShowViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun syncAllToFirebase() {
-        viewModelScope.launch {
-            showDao.getAllShows().collectLatest { allShows ->
-                allShows.forEach { show ->
-                    firebaseSync.syncShow(show)
-                }
+    private suspend fun syncAllToFirebase() {
+        try {
+            val allShows = showDao.getAllShows().first()
+            allShows.forEach { show ->
+                firebaseSync.syncShow(show)
             }
+        } catch (e: Exception) {
+            // Log but don't crash - sync is best-effort
         }
     }
 
     fun addShow(show: Show) {
         viewModelScope.launch {
-            val id = showDao.insertShow(show).toInt()
-            firebaseSync.syncShow(show.copy(id = id))
+            val showWithId = if (show.id == 0L) show.copy(id = System.currentTimeMillis()) else show
+            showDao.insertShow(showWithId)
+            firebaseSync.syncShow(showWithId)
         }
     }
 
@@ -103,24 +105,28 @@ class ShowViewModel(application: Application) : AndroidViewModel(application) {
                                      e.message?.contains("credential already in use", ignoreCase = true) == true
                     
                     if (isCollision) {
-                        // 2. Already linked to another account -> merge and sign in
+                        // 1. Save local shows BEFORE any destructive operations
                         val currentLocalShows = showDao.getAllShows().first()
                         
+                        // 2. Sign in to existing Google account
                         firebaseSync.signInWithGoogle(idToken)
                         
-                        // Clear Room cache of temporary guest
+                        // 3. Fetch remote shows BEFORE deleting local data
+                        val remoteShows = firebaseSync.fetchAllShows()
+                        
+                        // 4. NOW safe to clear and rebuild local database
                         showDao.deleteAllShows()
                         
-                        // Fetch existing permanent account's shows from Firebase
-                        val remoteShows = firebaseSync.fetchAllShows()
+                        // 5. Insert remote shows first
                         remoteShows.forEach { show ->
                             showDao.insertShow(show)
                         }
                         
-                        // Sync current guest shows into the signed-in account (merge)
-                        currentLocalShows.forEach { show ->
-                            val localId = showDao.insertShow(show).toInt()
-                            firebaseSync.syncShow(show.copy(id = localId))
+                        // 6. Merge local guest shows with unique IDs to avoid collisions
+                        currentLocalShows.forEachIndexed { index, show ->
+                            val mergedShow = show.copy(id = System.currentTimeMillis() + index)
+                            showDao.insertShow(mergedShow)
+                            firebaseSync.syncShow(mergedShow)
                         }
                         onSuccess()
                     } else {

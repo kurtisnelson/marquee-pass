@@ -13,8 +13,8 @@ enum class ShowStatus {
 @Entity(tableName = "shows")
 @Serializable
 data class Show(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val id: Long = 0L,
     val title: String = "",
     val theater: String? = null,
     val date: Long? = null,

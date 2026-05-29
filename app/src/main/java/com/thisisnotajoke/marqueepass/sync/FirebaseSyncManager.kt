@@ -11,29 +11,28 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 
-class FirebaseSyncManager {
-    companion object {
-        private var isPersistenceEnabled = false
-        
-        fun getDatabase(): FirebaseDatabase {
-            val db = FirebaseDatabase.getInstance()
-            if (!isPersistenceEnabled) {
-                try {
-                    db.setPersistenceEnabled(true)
-                    isPersistenceEnabled = true
-                } catch (e: Exception) {
-                    Log.w("FirebaseSyncManager", "Could not set persistence enabled", e)
-                }
+object FirebaseSyncManager {
+    private const val TAG = "FirebaseSyncManager"
+    private var isPersistenceEnabled = false
+
+    private fun getDatabase(): FirebaseDatabase {
+        val db = FirebaseDatabase.getInstance()
+        if (!isPersistenceEnabled) {
+            try {
+                db.setPersistenceEnabled(true)
+                isPersistenceEnabled = true
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not set persistence enabled", e)
             }
-            return db
         }
+        return db
     }
 
     private val auth = FirebaseAuth.getInstance()
     private val database = getDatabase()
-    
+
     private val usersRef = database.getReference("users")
-    
+
     private val syncedUsers = mutableSetOf<String>()
 
     private val _currentUserState = MutableStateFlow<FirebaseUser?>(auth.currentUser)
@@ -55,7 +54,7 @@ class FirebaseSyncManager {
                 usersRef.child(uid).child("shows").keepSynced(true)
                 syncedUsers.add(uid)
             } catch (e: Exception) {
-                Log.w("FirebaseSyncManager", "Could not keep shows synced for user $uid", e)
+                Log.w(TAG, "Could not keep shows synced for user $uid", e)
             }
         }
     }
@@ -75,7 +74,7 @@ class FirebaseSyncManager {
             }
             uid
         } catch (e: Exception) {
-            Log.e("FirebaseSyncManager", "Anonymous auth failed", e)
+            Log.e(TAG, "Anonymous auth failed", e)
             null
         }
     }
@@ -84,19 +83,19 @@ class FirebaseSyncManager {
         val userId = ensureAuthenticated() ?: return
         try {
             usersRef.child(userId).child("shows").child(show.id.toString()).setValue(show).await()
-            Log.d("FirebaseSyncManager", "Synced show ${show.id} to Firebase")
+            Log.d(TAG, "Synced show ${show.id} to Firebase")
         } catch (e: Exception) {
-            Log.e("FirebaseSyncManager", "Failed to sync show ${show.id}", e)
+            Log.e(TAG, "Failed to sync show ${show.id}", e)
         }
     }
 
-    suspend fun deleteShow(showId: Int) {
+    suspend fun deleteShow(showId: Long) {
         val userId = ensureAuthenticated() ?: return
         try {
             usersRef.child(userId).child("shows").child(showId.toString()).removeValue().await()
-            Log.d("FirebaseSyncManager", "Deleted show $showId from Firebase")
+            Log.d(TAG, "Deleted show $showId from Firebase")
         } catch (e: Exception) {
-            Log.e("FirebaseSyncManager", "Failed to delete show $showId", e)
+            Log.e(TAG, "Failed to delete show $showId", e)
         }
     }
 
@@ -106,7 +105,7 @@ class FirebaseSyncManager {
             val snapshot = usersRef.child(userId).child("shows").get().await()
             snapshot.children.mapNotNull { it.getValue(Show::class.java) }
         } catch (e: Exception) {
-            Log.e("FirebaseSyncManager", "Failed to fetch shows from Firebase", e)
+            Log.e(TAG, "Failed to fetch shows from Firebase", e)
             emptyList()
         }
     }

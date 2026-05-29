@@ -19,7 +19,7 @@ class Converters {
     }
 }
 
-@Database(entities = [Show::class], version = 1, exportSchema = false)
+@Database(entities = [Show::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun showDao(): ShowDao
@@ -34,7 +34,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "marquee_pass_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

@@ -17,7 +17,7 @@ interface ShowDao {
     fun getShowsByStatus(status: ShowStatus): Flow<List<Show>>
 
     @Query("SELECT * FROM shows WHERE id = :id")
-    suspend fun getShowById(id: Int): Show?
+    suspend fun getShowById(id: Long): Show?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertShow(show: Show): Long
