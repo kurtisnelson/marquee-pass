@@ -97,7 +97,6 @@ class ShowDaoTest {
         dao.insertShow(Show(id = 1L, title = "Seen1", status = ShowStatus.SEEN))
         dao.insertShow(Show(id = 2L, title = "Want1", status = ShowStatus.WANT_TO_SEE))
         dao.insertShow(Show(id = 3L, title = "Seen2", status = ShowStatus.SEEN))
-        dao.insertShow(Show(id = 4L, title = "Ticketed1", status = ShowStatus.TICKETED))
 
         val seenShows = dao.getShowsByStatus(ShowStatus.SEEN).first()
         assertEquals(2, seenShows.size)
@@ -116,21 +115,11 @@ class ShowDaoTest {
     }
 
     @Test
-    fun getShowsByStatus_filtersTicketed() = runTest {
-        dao.insertShow(Show(id = 1L, title = "Seen1", status = ShowStatus.SEEN))
-        dao.insertShow(Show(id = 2L, title = "Ticketed1", status = ShowStatus.TICKETED))
-
-        val ticketedShows = dao.getShowsByStatus(ShowStatus.TICKETED).first()
-        assertEquals(1, ticketedShows.size)
-        assertEquals("Ticketed1", ticketedShows[0].title)
-    }
-
-    @Test
     fun getShowsByStatus_returnsEmptyWhenNoneMatch() = runTest {
         dao.insertShow(Show(id = 1L, title = "Seen1", status = ShowStatus.SEEN))
 
-        val ticketedShows = dao.getShowsByStatus(ShowStatus.TICKETED).first()
-        assertTrue(ticketedShows.isEmpty())
+        val wantToSeeShows = dao.getShowsByStatus(ShowStatus.WANT_TO_SEE).first()
+        assertTrue(wantToSeeShows.isEmpty())
     }
 
     @Test
@@ -171,8 +160,7 @@ class ShowDaoTest {
     fun deleteAllShows_clearsDatabase() = runTest {
         dao.insertShow(Show(id = 1L, title = "A", status = ShowStatus.SEEN))
         dao.insertShow(Show(id = 2L, title = "B", status = ShowStatus.WANT_TO_SEE))
-        dao.insertShow(Show(id = 3L, title = "C", status = ShowStatus.TICKETED))
-        assertEquals(3, dao.getAllShows().first().size)
+        assertEquals(2, dao.getAllShows().first().size)
 
         dao.deleteAllShows()
         assertEquals(0, dao.getAllShows().first().size)
@@ -222,7 +210,7 @@ class ShowDaoTest {
         // Simulate: remote shows fetched successfully
         val remoteShows = listOf(
             Show(id = 300L, title = "Remote Show 1", status = ShowStatus.SEEN, rating = 5),
-            Show(id = 400L, title = "Remote Show 2", status = ShowStatus.TICKETED)
+            Show(id = 400L, title = "Remote Show 2", status = ShowStatus.WANT_TO_SEE)
         )
 
         // NOW safe to clear and rebuild

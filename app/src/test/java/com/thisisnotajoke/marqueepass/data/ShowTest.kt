@@ -77,10 +77,9 @@ class ShowTest {
     @Test
     fun `all ShowStatus values are defined`() {
         val statuses = ShowStatus.entries
-        assertEquals(3, statuses.size)
+        assertEquals(2, statuses.size)
         assertTrue(statuses.contains(ShowStatus.SEEN))
         assertTrue(statuses.contains(ShowStatus.WANT_TO_SEE))
-        assertTrue(statuses.contains(ShowStatus.TICKETED))
     }
 
     @Test
