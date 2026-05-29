@@ -42,9 +42,9 @@ fun MainDashboard() {
 
     val ambientGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF13091C), // Deep midnight violet ambient glow
-            Color(0xFF070C15), // Smooth slate dark blue
-            Color(0xFF080808)  // Obsidian black base
+            com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet,
+            com.thisisnotajoke.marqueepass.ui.theme.AmbientSlateBlue,
+            com.thisisnotajoke.marqueepass.ui.theme.Obsidian
         )
     )
 
@@ -75,7 +75,6 @@ fun MainDashboard() {
                 icon = { Icon(Icons.AutoMirrored.Rounded.List, contentDescription = "Want to See") },
                 label = { Text("Wishlist") }
             )
-
             item(
                 selected = currentRoute == Route.Profile,
                 onClick = {

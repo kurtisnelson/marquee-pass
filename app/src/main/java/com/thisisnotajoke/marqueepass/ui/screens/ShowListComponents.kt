@@ -1,18 +1,52 @@
 package com.thisisnotajoke.marqueepass.ui.screens
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ConfirmationNumber
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +56,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
@@ -106,7 +145,7 @@ fun ShowTicketItemPreview() {
                 show = Show(
                     title = "Hadestown",
                     theater = "Walter Kerr Theatre",
-                    status = ShowStatus.TICKETED,
+                    status = ShowStatus.SEEN,
                     date = System.currentTimeMillis(),
                     rating = 5,
                     notes = "An incredible epic broadway musical about Orpheus and Eurydice. Absolutely stellar design, neon lights, and amazing acoustic jazz score!"
@@ -128,13 +167,11 @@ fun ShowListScreen(
     onRefresh: () -> Unit,
     onAddShow: (Show) -> Unit,
     onDeleteShow: (Show) -> Unit,
-    onUpdateShow: (Show) -> Unit
+    onUpdateShow: (Show) -> Unit,
+    connectionStatus: ConnectivityStatus
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf<Show?>(null) }
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val connectivityObserver = remember { ConnectivityObserver(context) }
-    val connectionStatus by connectivityObserver.observe().collectAsState(initial = ConnectivityStatus.Available)
 
     Scaffold(
         floatingActionButton = {
@@ -174,13 +211,22 @@ fun ShowListScreen(
                 .padding(padding)
         ) {
             Text(
+                text = "MARQUEE PASS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 4.sp,
+                    color = MaterialTheme.colorScheme.tertiary
+                ),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp)
+            )
+            Text(
                 text = title,
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 2.sp
                 ),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 4.dp)
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 4.dp)
             )
 
             PullToRefreshBox(
@@ -190,11 +236,25 @@ fun ShowListScreen(
             ) {
                 if (shows.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "No shows yet", 
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Rounded.ConfirmationNumber,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "The stage is empty", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "Add a show to get started.", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 } else {
                     LazyColumn(
@@ -304,8 +364,8 @@ fun ShowTicketItem(
     val cardBackgroundBrush = remember(accentColor) {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF1E1E24).copy(alpha = 0.98f),
-                Color(0xFF121214).copy(alpha = 0.98f),
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop.copy(alpha = 0.98f),
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom.copy(alpha = 0.98f),
                 accentColor.copy(alpha = 0.04f)
             )
         )

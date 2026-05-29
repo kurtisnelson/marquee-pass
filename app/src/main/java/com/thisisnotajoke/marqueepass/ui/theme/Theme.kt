@@ -43,17 +43,15 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun MarqueePassTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, // FORCED DARK MODE for the neon aesthetic
     // Dynamic color is available on Android 12+
-    // We default to false to maintain the specific Marquee aesthetic, 
-    // but keep the option for users.
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            dynamicDarkColorScheme(context)
         }
 
         darkTheme -> DarkColorScheme
@@ -64,7 +62,6 @@ fun MarqueePassTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

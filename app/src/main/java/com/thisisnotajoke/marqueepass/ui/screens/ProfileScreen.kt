@@ -13,11 +13,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.CloudDone
-import androidx.compose.material.icons.rounded.Logout
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.ConfirmationNumber
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +61,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.thisisnotajoke.marqueepass.R
 import com.thisisnotajoke.marqueepass.ui.theme.NeonCyan
 import com.thisisnotajoke.marqueepass.ui.theme.NeonPink
-import com.thisisnotajoke.marqueepass.ui.theme.NeonYellow
+import com.thisisnotajoke.marqueepass.ui.theme.PlaybillYellow
 import kotlinx.coroutines.launch
 
 // Custom horizontal ticket shape with perforation cutouts on left and right edges
@@ -267,8 +277,8 @@ fun GuestProfileCard(
     val guestBgBrush = remember {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF202026),
-                Color(0xFF121215),
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
                 NeonPink.copy(alpha = 0.03f)
             )
         )
@@ -346,7 +356,7 @@ fun GuestProfileCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StatItem(label = "SEEN", value = seenCount.toString(), color = NeonYellow, modifier = Modifier.weight(1f))
+                    StatItem(label = "SEEN", value = seenCount.toString(), color = PlaybillYellow, modifier = Modifier.weight(1f))
                     StatItem(label = "WISH", value = wishCount.toString(), color = NeonCyan, modifier = Modifier.weight(1f))
                 }
 
@@ -455,9 +465,9 @@ fun SyncedProfileCard(
     val profileBgBrush = remember {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF1E1E26),
-                Color(0xFF111114),
-                Color(0xFF28132D)
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
+                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
+                com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet
             )
         )
     }
@@ -477,7 +487,7 @@ fun SyncedProfileCard(
         border = BorderStroke(
             1.5.dp,
             Brush.linearGradient(
-                colors = listOf(NeonPink, NeonCyan, NeonYellow, NeonPink)
+                colors = listOf(NeonPink, NeonCyan, PlaybillYellow, NeonPink)
             )
         )
     ) {
@@ -527,7 +537,7 @@ fun SyncedProfileCard(
                         .size(88.dp)
                         .border(
                             2.5.dp, 
-                            Brush.sweepGradient(listOf(NeonPink, NeonCyan, NeonYellow, NeonPink)), 
+                            Brush.sweepGradient(listOf(NeonPink, NeonCyan, PlaybillYellow, NeonPink)), 
                             CircleShape
                         )
                         .padding(4.dp)
@@ -585,7 +595,7 @@ fun SyncedProfileCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StatItem(label = "SEEN", value = seenCount.toString(), color = NeonYellow, modifier = Modifier.weight(1f))
+                    StatItem(label = "SEEN", value = seenCount.toString(), color = PlaybillYellow, modifier = Modifier.weight(1f))
                     StatItem(label = "WISH", value = wishCount.toString(), color = NeonCyan, modifier = Modifier.weight(1f))
                 }
             }
@@ -621,7 +631,7 @@ fun SyncedProfileCard(
                     Icon(
                         imageVector = Icons.Rounded.CloudDone,
                         contentDescription = null,
-                        tint = NeonYellow,
+                        tint = PlaybillYellow,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -629,7 +639,7 @@ fun SyncedProfileCard(
                         text = "CLOUD SYNC ENABLED",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = NeonYellow,
+                            color = PlaybillYellow,
                             letterSpacing = 1.sp
                         )
                     )
@@ -655,7 +665,7 @@ fun SyncedProfileCard(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Logout,
+                            imageVector = Icons.AutoMirrored.Rounded.Logout,
                             contentDescription = null,
                             tint = NeonPink,
                             modifier = Modifier.size(16.dp)
