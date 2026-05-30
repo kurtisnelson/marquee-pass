@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.toObject
+import com.google.firebase.perf.FirebasePerformance
+import com.google.firebase.perf.metrics.Trace
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import com.thisisnotajoke.marqueepass.di.AppScope
@@ -83,14 +85,23 @@ class ShowRepository @Inject constructor(
      * Fetches the shows for an arbitrary [uid] once without a live listener.
      * Used to read guest data before switching auth users.
      */
-    suspend fun getShowsOnce(uid: String): List<Show> = try {
-        val snapshot = showsCollection(uid).get().await()
-        snapshot.documents.mapNotNull { doc ->
-            runCatching { doc.toObject<Show>() }.getOrNull()
+    suspend fun getShowsOnce(uid: String): List<Show> {
+        val trace: Trace = FirebasePerformance.getInstance()
+            .newTrace("fetch_shows_once")
+        trace.start()
+        return try {
+            val snapshot = showsCollection(uid).get().await()
+            val shows = snapshot.documents.mapNotNull { doc ->
+                runCatching { doc.toObject<Show>() }.getOrNull()
+            }
+            trace.putMetric("show_count", shows.size.toLong())
+            shows
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch shows once for uid=$uid", e)
+            emptyList()
+        } finally {
+            trace.stop()
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Failed to fetch shows once for uid=$uid", e)
-        emptyList()
     }
 
     // ──────────────────────────────────────────────────────────────────────────

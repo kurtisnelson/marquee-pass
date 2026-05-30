@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.zacsweers.metro)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics.gradle)
+    alias(libs.plugins.firebase.perf.gradle)
 }
 
 android {
@@ -66,6 +67,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.perf)
+    implementation(libs.firebase.analytics)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
