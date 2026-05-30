@@ -406,20 +406,35 @@ fun ShowTicketItem(
     var expanded by remember { mutableStateOf(false) }
     
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
     val accentColor = when (show.status) {
-        ShowStatus.SEEN -> MaterialTheme.colorScheme.tertiary // Neon Yellow
-        else -> MaterialTheme.colorScheme.secondary // Neon Cyan
+        ShowStatus.SEEN -> {
+            if (isSystemDark) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+        }
+        else -> {
+            if (isSystemDark) MaterialTheme.colorScheme.secondary else Color(0xFF006064)
+        }
     }
 
     // Dynamic, beautiful ambient color gradient containing a subtle status tint
-    val cardBackgroundBrush = remember(accentColor) {
-        Brush.linearGradient(
-            colors = listOf(
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop.copy(alpha = 0.98f),
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom.copy(alpha = 0.98f),
-                accentColor.copy(alpha = 0.04f)
+    val cardBackgroundBrush = remember(accentColor, isSystemDark) {
+        if (isSystemDark) {
+            Brush.linearGradient(
+                colors = listOf(
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop.copy(alpha = 0.98f),
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom.copy(alpha = 0.98f),
+                    accentColor.copy(alpha = 0.04f)
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFAFAFA), // Crisp white ticket surface
+                    Color(0xFFF2F2F7), // Soft elevated light gray
+                    accentColor.copy(alpha = 0.03f)
+                )
+            )
+        }
     }
 
     val cutoutOffset = 84.dp
@@ -507,7 +522,7 @@ fun ShowTicketItem(
                         text = show.title.uppercase(),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Black,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             letterSpacing = 0.5.sp
                         ),
                         maxLines = 2,
@@ -749,7 +764,7 @@ fun ShowTicketItem(
                             onClick = { onEditClick() },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = Color.White
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = BorderStroke(1.dp, accentColor.copy(alpha = 0.5f)),
                             shape = RoundedCornerShape(20.dp),
