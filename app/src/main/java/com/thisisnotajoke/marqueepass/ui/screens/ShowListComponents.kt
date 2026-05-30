@@ -495,27 +495,7 @@ fun ShowTicketItem(
                         .weight(1f)
                         .padding(start = 16.dp, top = 16.dp, end = 12.dp, bottom = 16.dp)
                 ) {
-                    // Header Tag Row
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = when (show.status) {
-                                ShowStatus.SEEN -> "Attended"
-                                else -> "WISHLIST • Staged"
-                            }.uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.2.sp
-                            ),
-                            color = accentColor.copy(alpha = 0.85f)
-                        )
 
-                    }
-                    
-                    Spacer(modifier = Modifier.height(10.dp))
                     
                     // Show Title
                     Text(
@@ -562,18 +542,7 @@ fun ShowTicketItem(
                         } else {
                             Spacer(modifier = Modifier.width(1.dp))
                         }
-                        
-                        val stubMeta = when (show.status) {
-                            ShowStatus.SEEN -> "ATTENDED"
-                            else -> "WISHLIST"
-                        }
-                        Text(
-                            text = stubMeta,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        )
+
                     }
                 }
                 
