@@ -118,6 +118,31 @@ class HorizontalTicketShape(
     }
 }
 
+@Composable
+fun MarqueeHeader(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(com.thisisnotajoke.marqueepass.ui.theme.PlaybillYellow)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "MARQUEE PASS",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontFamily = com.thisisnotajoke.marqueepass.ui.theme.PlaybillFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.Black,
+                letterSpacing = 4.sp,
+                fontSize = 22.sp
+            )
+        )
+    }
+}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(viewModel: ShowViewModel = viewModel()) {
@@ -308,11 +333,13 @@ fun GuestProfileCard(
                 .padding(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            MarqueeHeader()
+
             // Main Card Body
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp),
+                    .padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Tag Header
@@ -498,11 +525,13 @@ fun SyncedProfileCard(
                 .padding(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            MarqueeHeader()
+
             // Main Card Body
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp),
+                    .padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Tag Header
