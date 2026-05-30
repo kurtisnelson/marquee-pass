@@ -92,7 +92,7 @@ fun AddShowDialog(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.5.sp
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                 OutlinedTextField(

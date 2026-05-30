@@ -40,12 +40,21 @@ fun MainDashboard() {
         }
     }
 
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
     val ambientGradient = Brush.verticalGradient(
-        colors = listOf(
-            com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet,
-            com.thisisnotajoke.marqueepass.ui.theme.AmbientSlateBlue,
-            com.thisisnotajoke.marqueepass.ui.theme.Obsidian
-        )
+        colors = if (isSystemDark) {
+            listOf(
+                com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet,
+                com.thisisnotajoke.marqueepass.ui.theme.AmbientSlateBlue,
+                com.thisisnotajoke.marqueepass.ui.theme.Obsidian
+            )
+        } else {
+            listOf(
+                Color(0xFFE8EAF6), // Soft lavender
+                Color(0xFFE0F7FA), // Soft mint/cyan
+                Color(0xFFFFFBFE)  // Pure light background
+            )
+        }
     )
 
     NavigationSuiteScaffold(
