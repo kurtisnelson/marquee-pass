@@ -1,8 +1,11 @@
 package com.thisisnotajoke.marqueepass.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Color
+import com.thisisnotajoke.marqueepass.ui.theme.PlaybillFontFamily
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -55,19 +58,42 @@ fun AddShowDialog(
             modifier = Modifier.padding(16.dp)
         ) {
             Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = if (initialShow == null) "Add Show" else "Edit Show",
-                    style = MaterialTheme.typography.displaySmall.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                // PINNED Marquee Header at the top of the dialog
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "MARQUEE PASS",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontFamily = PlaybillFontFamily,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.Black,
+                            letterSpacing = 4.sp,
+                            fontSize = 18.sp
+                        )
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = if (initialShow == null) "ADD NEW SHOW" else "EDIT SHOW DETAILS",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp
+                        ),
+                        color = Color.White
+                    )
 
                 OutlinedTextField(
                     value = title,
@@ -91,24 +117,26 @@ fun AddShowDialog(
                     )
                 )
 
-                Button(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
-                ) {
-                    Text(
-                        text = if (datePickerState.selectedDateMillis != null) {
-                            val cal = Calendar.getInstance()
-                            cal.timeInMillis = datePickerState.selectedDateMillis!!
-                            "${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)}/${cal.get(Calendar.YEAR)}"
-                        } else {
-                            "Select Date"
-                        },
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                    )
+                if ((initialShow?.status ?: status) == ShowStatus.SEEN) {
+                    Button(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        )
+                    ) {
+                        Text(
+                            text = if (datePickerState.selectedDateMillis != null) {
+                                val cal = Calendar.getInstance()
+                                cal.timeInMillis = datePickerState.selectedDateMillis!!
+                                "${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)}/${cal.get(Calendar.YEAR)}"
+                            } else {
+                                "Select Date"
+                            },
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
                 }
 
                 if ((initialShow?.status ?: status) == ShowStatus.SEEN) {
@@ -174,8 +202,16 @@ fun AddShowDialog(
 
                 OutlinedTextField(
                     value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes", color = MaterialTheme.colorScheme.secondary) },
+                    onValueChange = { if (it.length <= 1000) notes = it },
+                    label = { Text("Notes (Max 1000 characters)", color = MaterialTheme.colorScheme.secondary) },
+                    supportingText = {
+                        Text(
+                            text = "${notes.length}/1000",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -202,7 +238,7 @@ fun AddShowDialog(
                                         id = initialShow?.id ?: 0,
                                         title = title,
                                         theater = theater,
-                                        date = datePickerState.selectedDateMillis,
+                                        date = if ((initialShow?.status ?: status) == ShowStatus.SEEN) datePickerState.selectedDateMillis else null,
                                         status = initialShow?.status ?: status,
                                         rating = if ((initialShow?.status ?: status) == ShowStatus.SEEN) rating else null,
                                         notes = notes
@@ -219,6 +255,7 @@ fun AddShowDialog(
                         Text("Save", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
                     }
                 }
+            }
             }
         }
     }

@@ -1,8 +1,10 @@
 package com.thisisnotajoke.marqueepass.ui.screens
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.*
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -133,6 +136,54 @@ class TicketShape(
         return Outline.Generic(path)
     }
 }
+
+
+
+@Composable
+fun MarqueeBulbRow(
+    modifier: Modifier = Modifier,
+    bulbCount: Int = 18,
+    color: Color = Color(0xFFFFCC00)
+) {
+    // Elegant infinite cycle driving a sinusoidal phase shift (Designer recommendation)
+    val infiniteTransition = rememberInfiniteTransition(label = "MarqueeBulbs")
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "BulbPhase"
+    )
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        for (i in 0 until bulbCount) {
+            val intensity = remember(i) {
+                derivedStateOf {
+                    val bulbOffset = (i.toFloat() / bulbCount.toFloat()) * (2 * Math.PI).toFloat() * 2f
+                    val sinValue = Math.sin(phase.toDouble() + bulbOffset).toFloat()
+                    (sinValue * 0.4f + 0.6f).coerceIn(0.2f, 1.0f)
+                }
+            }
+
+            val bulbColor = color.copy(alpha = intensity.value)
+            val scaleFactor = 0.85f + (intensity.value * 0.15f)
+
+            Box(
+                modifier = Modifier
+                    .size(5.dp)
+                    .graphicsLayer(scaleX = scaleFactor, scaleY = scaleFactor)
+                    .background(bulbColor, CircleShape)
+            )
+        }
+    }
+}
+
 
 
 
@@ -409,6 +460,14 @@ fun ShowTicketItem(
                 )
                 .fillMaxWidth()
         ) {
+            MarqueeBulbRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 6.dp),
+                bulbCount = 18,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            )
+
             // Card Front: Title details + Tear-off Stub side
             Row(
                 modifier = Modifier
@@ -429,7 +488,7 @@ fun ShowTicketItem(
                     ) {
                         Text(
                             text = when (show.status) {
-                                ShowStatus.SEEN -> "STAGE STAMP • Attended"
+                                ShowStatus.SEEN -> "Attended"
                                 else -> "WISHLIST • Staged"
                             }.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
@@ -438,13 +497,7 @@ fun ShowTicketItem(
                             ),
                             color = accentColor.copy(alpha = 0.85f)
                         )
-                        Text(
-                            text = "№ ${show.id.toString().takeLast(4).padStart(4, '0')}",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        )
+
                     }
                     
                     Spacer(modifier = Modifier.height(10.dp))
@@ -480,17 +533,20 @@ fun ShowTicketItem(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        show.date?.let {
-                            val dateFormat = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault())
+                        if (show.status == ShowStatus.SEEN && show.date != null) {
+                            val dateFormat = remember { SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault()) }
+                            val formattedDate = remember(show.date) { dateFormat.format(Date(show.date)).uppercase() }
                             Text(
-                                text = dateFormat.format(Date(it)).uppercase(),
+                                text = formattedDate,
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.3.sp
                                 ),
                                 color = accentColor
                             )
-                        } ?: Spacer(modifier = Modifier.width(1.dp))
+                        } else {
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
                         
                         val stubMeta = when (show.status) {
                             ShowStatus.SEEN -> "ATTENDED"
@@ -681,6 +737,8 @@ fun ShowTicketItem(
                         }
                     }
                     
+
+                    
                     // Expanded action buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -730,10 +788,10 @@ fun ShowTicketItem(
                             onClick = {
                                 when (show.status) {
                                     ShowStatus.SEEN -> {
-                                        onUpdateShow(show.copy(status = ShowStatus.WANT_TO_SEE, rating = null))
+                                        onUpdateShow(show.copy(status = ShowStatus.WANT_TO_SEE, rating = null, date = null))
                                     }
                                     else -> {
-                                        onUpdateShow(show.copy(status = ShowStatus.SEEN, rating = 5))
+                                        onUpdateShow(show.copy(status = ShowStatus.SEEN, rating = 5, date = System.currentTimeMillis()))
                                     }
                                 }
                             },
@@ -772,6 +830,14 @@ fun ShowTicketItem(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(6.dp))
+            MarqueeBulbRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 6.dp),
+                bulbCount = 18,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            )
         }
     }
 }
