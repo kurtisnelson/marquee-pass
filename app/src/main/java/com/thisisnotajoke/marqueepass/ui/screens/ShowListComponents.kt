@@ -570,17 +570,6 @@ fun ShowTicketItem(
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "STUB",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center

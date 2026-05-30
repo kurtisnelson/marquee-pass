@@ -367,13 +367,6 @@ fun GuestProfileCard(
                         ),
                         color = NeonPink
                     )
-                    Text(
-                        text = "№ LOCAL-USER",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        )
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -568,13 +561,6 @@ fun SyncedProfileCard(
                             letterSpacing = 1.5.sp
                         ),
                         color = NeonCyan
-                    )
-                    Text(
-                        text = "№ PROFILE-${email.hashCode().toString().takeLast(6).padStart(6, '0')}",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
                     )
                 }
 
