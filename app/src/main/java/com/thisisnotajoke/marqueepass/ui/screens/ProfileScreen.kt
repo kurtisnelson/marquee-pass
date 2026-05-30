@@ -299,14 +299,25 @@ fun GuestProfileCard(
     val cutoutOffset = 112.dp
     val ticketShape = remember { HorizontalTicketShape(cutoutRadius = 12.dp, cutoutOffsetFromBottom = cutoutOffset) }
 
-    val guestBgBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
-                NeonPink.copy(alpha = 0.03f)
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val guestBgBrush = remember(isSystemDark) {
+        if (isSystemDark) {
+            Brush.linearGradient(
+                colors = listOf(
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
+                    NeonPink.copy(alpha = 0.03f)
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFAFAFA),
+                    Color(0xFFF2F2F7),
+                    NeonPink.copy(alpha = 0.02f)
+                )
+            )
+        }
     }
 
     Card(
@@ -371,7 +382,7 @@ fun GuestProfileCard(
                     text = "OFFLINE PROFILE STATS",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         letterSpacing = 1.sp
                     )
                 )
@@ -488,15 +499,25 @@ fun SyncedProfileCard(
     val cutoutOffset = 112.dp
     val ticketShape = remember { HorizontalTicketShape(cutoutRadius = 12.dp, cutoutOffsetFromBottom = cutoutOffset) }
 
-    // Stunning dark gradient containing pink, cyan, and violet reflections
-    val profileBgBrush = remember {
-        Brush.linearGradient(
-            colors = listOf(
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
-                com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
-                com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val profileBgBrush = remember(isSystemDark) {
+        if (isSystemDark) {
+            Brush.linearGradient(
+                colors = listOf(
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardTop,
+                    com.thisisnotajoke.marqueepass.ui.theme.TicketCardBottom,
+                    com.thisisnotajoke.marqueepass.ui.theme.AmbientDeepViolet
+                )
             )
-        )
+        } else {
+            Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFAFAFA),
+                    Color(0xFFF2F2F7),
+                    Color(0xFFF3E5F5)
+                )
+            )
+        }
     }
 
     Card(
@@ -606,7 +627,7 @@ fun SyncedProfileCard(
                     text = displayName.uppercase(),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         letterSpacing = 0.5.sp
                     )
                 )
@@ -722,9 +743,10 @@ fun StatItem(
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
     Surface(
-        color = Color.Black.copy(alpha = 0.45f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.3f)),
+        color = if (isSystemDark) Color.Black.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.05f),
+        border = BorderStroke(1.dp, color.copy(alpha = if (isSystemDark) 0.3f else 0.5f)),
         shape = RoundedCornerShape(10.dp),
         modifier = modifier
     ) {
