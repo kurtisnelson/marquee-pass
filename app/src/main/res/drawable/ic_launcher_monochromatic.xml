@@ -1,0 +1,66 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Marquee Border line -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:pathData="M20,20h68a8,8 0 0 1 8,8v52a8,8 0 0 1 -8,8H20a8,8 0 0 1 -8,-8V28a8,8 0 0 1 8,-8z" />
+
+    <!-- Bulb Dots -->
+    <path android:fillColor="#FFFFFF" android:pathData="M24,24a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M40,24a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M56,24a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M72,24a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M88,24a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+
+    <path android:fillColor="#FFFFFF" android:pathData="M24,84a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M40,84a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M56,84a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M72,84a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M88,84a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+
+    <path android:fillColor="#FFFFFF" android:pathData="M16,39a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M16,54a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M16,69a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+
+    <path android:fillColor="#FFFFFF" android:pathData="M92,39a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M92,54a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M92,69a2,2 0 1 1 -4,0 2,2 0 1 1 4,0"/>
+
+    <!-- The Ticket Stub Silhouette line border -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M32,36h44v36h-44z"/>
+
+    <!-- Ticket notches drawn inside as line circles -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M32,54a4,4 0 1 0 0,-8a4,4 0 0 0 0,8z"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M76,54a4,4 0 1 0 0,-8a4,4 0 0 0 0,8z"/>
+
+    <!-- Perforated dashed line connecting cutouts -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M37,54h2 M41,54h2 M45,54h2 M49,54h2 M53,54h2 M57,54h2 M61,54h2 M65,54h2 M69,54h2"/>
+
+    <!-- Star symbol in the center of the stub -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,42l1.8,3.6 4,.6 -2.9,2.8 .7,4 -3.6,-1.9 -3.6,1.9 .7,-4 -2.9,-2.8 4,-0.6z"/>
+</vector>
