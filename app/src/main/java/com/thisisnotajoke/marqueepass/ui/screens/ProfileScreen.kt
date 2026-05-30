@@ -684,6 +684,10 @@ fun SyncedProfileCard(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Elegant translucent Sign-Out Button
+                val buttonAccent = if (isSystemDark) NeonCyan else Color(0xFF006064)
+                val buttonBg = if (isSystemDark) Color.Black.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.05f)
+                val buttonContentColor = if (isSystemDark) Color.White else Color(0xFF006064)
+
                 Button(
                     onClick = onSignOutClick,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -691,9 +695,9 @@ fun SyncedProfileCard(
                     modifier = Modifier
                         .fillMaxWidth(0.55f)
                         .height(38.dp)
-                        .border(1.dp, NeonPink, RoundedCornerShape(19.dp))
+                        .border(1.dp, buttonAccent, RoundedCornerShape(19.dp))
                         .clip(RoundedCornerShape(19.dp))
-                        .background(Color.Black.copy(alpha = 0.4f))
+                        .background(buttonBg)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -703,7 +707,7 @@ fun SyncedProfileCard(
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.Logout,
                             contentDescription = null,
-                            tint = NeonPink,
+                            tint = buttonAccent,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -711,7 +715,7 @@ fun SyncedProfileCard(
                             text = "SIGN OUT",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = buttonContentColor
                             )
                         )
                     }
