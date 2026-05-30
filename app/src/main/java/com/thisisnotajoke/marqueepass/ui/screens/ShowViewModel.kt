@@ -69,7 +69,8 @@ class ShowViewModel(
                 // Fetch from Firebase and update Room
                 val remoteShows = firebaseSync.fetchAllShows()
                 remoteShows.forEach { show ->
-                    showDao.insertShow(show)
+                    val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
+                    showDao.insertShow(sanitized)
                 }
             } finally {
                 _isRefreshing.value = false
@@ -90,7 +91,8 @@ class ShowViewModel(
 
     fun addShow(show: Show) {
         viewModelScope.launch {
-            val showWithId = if (show.id == 0L) show.copy(id = System.currentTimeMillis()) else show
+            val sanitizedShow = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
+            val showWithId = if (sanitizedShow.id == 0L) sanitizedShow.copy(id = System.currentTimeMillis()) else sanitizedShow
             showDao.insertShow(showWithId)
             firebaseSync.syncShow(showWithId)
         }
@@ -98,8 +100,9 @@ class ShowViewModel(
 
     fun updateShow(show: Show) {
         viewModelScope.launch {
-            showDao.updateShow(show)
-            firebaseSync.syncShow(show)
+            val sanitizedShow = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
+            showDao.updateShow(sanitizedShow)
+            firebaseSync.syncShow(sanitizedShow)
         }
     }
 
@@ -137,12 +140,14 @@ class ShowViewModel(
                         
                         // 5. Insert remote shows first
                         remoteShows.forEach { show ->
-                            showDao.insertShow(show)
+                            val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
+                            showDao.insertShow(sanitized)
                         }
                         
                         // 6. Merge local guest shows with unique IDs to avoid collisions
                         currentLocalShows.forEachIndexed { index, show ->
-                            val mergedShow = show.copy(id = System.currentTimeMillis() + index)
+                            val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
+                            val mergedShow = sanitized.copy(id = System.currentTimeMillis() + index)
                             showDao.insertShow(mergedShow)
                             firebaseSync.syncShow(mergedShow)
                         }
