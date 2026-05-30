@@ -1,176 +1,156 @@
 package com.thisisnotajoke.marqueepass.ui.screens
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.thisisnotajoke.marqueepass.data.AppDatabase
+import com.google.firebase.auth.FirebaseUser
 import com.thisisnotajoke.marqueepass.data.Show
+import com.thisisnotajoke.marqueepass.data.ShowRepository
 import com.thisisnotajoke.marqueepass.data.ShowStatus
-import com.thisisnotajoke.marqueepass.sync.FirebaseSyncManager
+import com.thisisnotajoke.marqueepass.sync.FirebaseAuthManager
 import com.thisisnotajoke.marqueepass.util.ConnectivityObserver
 import com.thisisnotajoke.marqueepass.util.ConnectivityStatus
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-
-import androidx.lifecycle.ViewModel
-import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import com.thisisnotajoke.marqueepass.di.AppScope
-import com.thisisnotajoke.marqueepass.data.ShowDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @Inject
 @ContributesIntoMap(AppScope::class)
 @ViewModelKey(ShowViewModel::class)
 class ShowViewModel(
-    private val showDao: ShowDao,
-    private val firebaseSync: FirebaseSyncManager,
+    private val showRepository: ShowRepository,
+    private val authManager: FirebaseAuthManager,
     private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
-    val currentUser: StateFlow<FirebaseUser?> = firebaseSync.currentUserState
+    val currentUser: StateFlow<FirebaseUser?> = authManager.currentUserState
 
     val connectionStatus: StateFlow<ConnectivityStatus> = connectivityObserver.observe()
         .stateIn(
             scope = viewModelScope,
-            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = ConnectivityStatus.Available
         )
 
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    // Share a single Firestore listener across both filtered flows.
+    private val allShows = showRepository.observeAllShows()
+        .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
-    val seenShows: Flow<List<Show>> = showDao.getShowsByStatus(ShowStatus.SEEN)
-    val wantToSeeShows: Flow<List<Show>> = showDao.getShowsByStatus(ShowStatus.WANT_TO_SEE)
+    val seenShows: Flow<List<Show>> = allShows.map { shows ->
+        shows.filter { it.status == ShowStatus.SEEN }
+    }
+
+    val wantToSeeShows: Flow<List<Show>> = allShows.map { shows ->
+        shows.filter { it.status == ShowStatus.WANT_TO_SEE }
+    }
 
     init {
-        // Monitor connectivity and trigger a full sync when network becomes available
-        viewModelScope.launch {
-            connectivityObserver.observe().collectLatest { status ->
-                if (status == ConnectivityStatus.Available) {
-                    syncAllToFirebase()
-                }
-            }
-        }
+        // Ensure the user is always authenticated (creates anonymous session if needed).
+        viewModelScope.launch { authManager.ensureAuthenticated() }
     }
 
-    fun refresh() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            try {
-                // Fetch from Firebase and update Room
-                val remoteShows = firebaseSync.fetchAllShows()
-                remoteShows.forEach { show ->
-                    val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
-                    showDao.insertShow(sanitized)
-                }
-            } finally {
-                _isRefreshing.value = false
-            }
-        }
-    }
-
-    private suspend fun syncAllToFirebase() {
-        try {
-            val allShows = showDao.getAllShows().first()
-            allShows.forEach { show ->
-                firebaseSync.syncShow(show)
-            }
-        } catch (e: Exception) {
-            // Log but don't crash - sync is best-effort
-        }
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // CRUD — all writes go directly to Firestore; real-time listener
+    // propagates changes back to the UI automatically.
+    // ──────────────────────────────────────────────────────────────────────────
 
     fun addShow(show: Show) {
-        viewModelScope.launch {
-            val sanitizedShow = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
-            val showWithId = if (sanitizedShow.id == 0L) sanitizedShow.copy(id = System.currentTimeMillis()) else sanitizedShow
-            showDao.insertShow(showWithId)
-            firebaseSync.syncShow(showWithId)
-        }
+        val sanitized = sanitize(show)
+        viewModelScope.launch { showRepository.addShow(sanitized) }
     }
 
     fun updateShow(show: Show) {
-        viewModelScope.launch {
-            val sanitizedShow = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
-            showDao.updateShow(sanitizedShow)
-            firebaseSync.syncShow(sanitizedShow)
-        }
+        val sanitized = sanitize(show)
+        viewModelScope.launch { showRepository.updateShow(sanitized) }
     }
 
     fun deleteShow(show: Show) {
-        viewModelScope.launch {
-            showDao.deleteShow(show)
-            firebaseSync.deleteShow(show.id)
-        }
+        viewModelScope.launch { showRepository.deleteShow(show.id) }
     }
 
-    fun handleGoogleSignIn(idToken: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    // ──────────────────────────────────────────────────────────────────────────
+    // Authentication
+    // ──────────────────────────────────────────────────────────────────────────
+
+    fun handleGoogleSignIn(
+        idToken: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                try {
-                    // Try to link first (preserves local data without migration if Google account is new to Firebase)
-                    firebaseSync.linkWithGoogle(idToken)
-                    onSuccess()
-                } catch (e: Exception) {
-                    val isCollision = e is FirebaseAuthUserCollisionException || 
-                                     e.cause is FirebaseAuthUserCollisionException || 
-                                     e.message?.contains("credential already in use", ignoreCase = true) == true
-                    
-                    if (isCollision) {
-                        // 1. Save local shows BEFORE any destructive operations
-                        val currentLocalShows = showDao.getAllShows().first()
-                        
-                        // 2. Sign in to existing Google account
-                        firebaseSync.signInWithGoogle(idToken)
-                        
-                        // 3. Fetch remote shows BEFORE deleting local data
-                        val remoteShows = firebaseSync.fetchAllShows()
-                        
-                        // 4. NOW safe to clear and rebuild local database
-                        showDao.deleteAllShows()
-                        
-                        // 5. Insert remote shows first
-                        remoteShows.forEach { show ->
-                            val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
-                            showDao.insertShow(sanitized)
-                        }
-                        
-                        // 6. Merge local guest shows with unique IDs to avoid collisions
-                        currentLocalShows.forEachIndexed { index, show ->
-                            val sanitized = if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null) else show
-                            val mergedShow = sanitized.copy(id = System.currentTimeMillis() + index)
-                            showDao.insertShow(mergedShow)
-                            firebaseSync.syncShow(mergedShow)
-                        }
-                        onSuccess()
-                    } else {
-                        throw e
-                    }
-                }
+                tryLinkOrSignIn(idToken, onSuccess)
             } catch (e: Exception) {
                 onError(e.message ?: "Google authentication failed")
             }
         }
     }
 
+    /**
+     * Attempts to link the anonymous account to Google first (preserves the
+     * existing Firestore data path). On credential collision, performs a full
+     * sign-in and merges any guest shows that were not already present in the
+     * Google account's Firestore collection.
+     */
+    private suspend fun tryLinkOrSignIn(idToken: String, onSuccess: () -> Unit) {
+        try {
+            authManager.linkWithGoogle(idToken)
+            onSuccess()
+        } catch (linkException: Exception) {
+            val isCollision = linkException is FirebaseAuthUserCollisionException
+                || linkException.cause is FirebaseAuthUserCollisionException
+                || linkException.message?.contains("credential already in use", ignoreCase = true) == true
+
+            if (!isCollision) throw linkException
+
+            // ── Collision flow ────────────────────────────────────────────────
+            // 1. Capture the guest UID and their shows BEFORE switching auth.
+            val guestUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                ?: throw Exception("No guest session to merge from")
+            val guestShows = showRepository.getShowsOnce(guestUid)
+
+            // 2. Sign in with the Google account (auth state changes here).
+            authManager.signInWithGoogle(idToken)
+
+            // 3. Write each guest show into the Google account's collection with
+            //    a new Firestore-generated ID (clears the old anonymous doc ID).
+            guestShows.forEach { guestShow ->
+                val sanitized = sanitize(guestShow).copy(id = "")
+                showRepository.addShow(sanitized)
+            }
+            // The Firestore listener in ShowRepository automatically switches
+            // to the new uid's collection, so no manual UI refresh is needed.
+            onSuccess()
+        }
+    }
+
     fun signOut(onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                firebaseSync.signOut()
-                showDao.deleteAllShows()
+                // signOut() in FirebaseAuthManager also creates a fresh anonymous
+                // session, so the Firestore listener re-attaches immediately.
+                authManager.signOut()
                 onSuccess()
             } catch (e: Exception) {
-                // Ignore sign out exceptions or handle gracefully
+                // Sign-out errors are non-fatal; report but don't crash.
             }
         }
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Ensures wishlist shows never carry a date or rating. */
+    private fun sanitize(show: Show): Show =
+        if (show.status == ShowStatus.WANT_TO_SEE) show.copy(date = null, rating = null)
+        else show
 }

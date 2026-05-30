@@ -1,0 +1,125 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users/{userId}/shows
+// Document ID: Auto-generated Firestore ID (string)
+// Fields:
+//   - title:   string (required, 1–100 chars)
+//   - status:  string (required, "SEEN" | "WANT_TO_SEE")
+//   - theater: string (optional, max 150 chars)
+//   - date:    number (optional epoch millis; only valid when status == "SEEN")
+//   - rating:  number (optional, 1–5 integer; only valid when status == "SEEN")
+//   - notes:   string (optional, max 1000 chars)
+//
+// Auth patterns:
+//   - Anonymous users: data lives under their anonymous UID
+//   - Google-signed-in users: data lives under their Google UID
+//   - Only the owner may read or write their own shows
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Helper Functions
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validates a required string field is present, is a string, and satisfies
+    // length constraints [minLen, maxLen].
+    function validString(field, minLen, maxLen) {
+      return field in request.resource.data
+          && request.resource.data[field] is string
+          && request.resource.data[field].size() >= minLen
+          && request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validates an optional string field: if present it must be a string within
+    // [minLen, maxLen]; if absent the rule still passes.
+    function validOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data)
+          || (request.resource.data[field] is string
+              && request.resource.data[field].size() >= minLen
+              && request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validates an optional integer field: if present it must be a number
+    // within [minVal, maxVal]; if absent the rule still passes.
+    function validOptionalInt(field, minVal, maxVal) {
+      return !(field in request.resource.data)
+          || (request.resource.data[field] is number
+              && request.resource.data[field] >= minVal
+              && request.resource.data[field] <= maxVal
+              && request.resource.data[field] % 1 == 0);
+    }
+
+    // Validates an optional numeric field (non-integer, e.g. epoch millis).
+    function validOptionalNumber(field) {
+      return !(field in request.resource.data)
+          || request.resource.data[field] is number;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Domain Validator
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // Validates the full schema of a show document.
+    // Called on BOTH create and update to prevent invalid-state transitions.
+    function isValidShow(data) {
+      // Enforce strict schema — no unknown fields allowed.
+      let allowedFields = ['title', 'status', 'theater', 'date', 'rating', 'notes'];
+      return data.keys().hasOnly(allowedFields)
+          // --- Required fields ---
+          && validString('title', 1, 100)
+          && 'status' in data
+          && data.status in ['SEEN', 'WANT_TO_SEE']
+          // --- Optional fields ---
+          && validOptionalString('theater', 1, 150)
+          && validOptionalNumber('date')
+          && validOptionalInt('rating', 1, 5)
+          && validOptionalString('notes', 0, 1000)
+          // --- Business logic: date and rating only allowed on SEEN shows ---
+          && (data.status == 'SEEN' || !('date' in data))
+          && (data.status == 'SEEN' || !('rating' in data));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Rules
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // Deny everything by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // A user may only read or write their own shows.
+    match /users/{userId}/shows/{showId} {
+      // Read: owner only.
+      allow read: if isOwner(userId);
+
+      // Create: owner only + must pass full schema validation.
+      allow create: if isOwner(userId)
+          && isValidShow(request.resource.data);
+
+      // Update: owner only + must pass full schema validation on the new state.
+      // The document ID (showId) is never stored inside the document, so there
+      // is no ownership field to protect against hijacking.
+      allow update: if isOwner(userId)
+          && isValidShow(request.resource.data);
+
+      // Delete: owner only.
+      allow delete: if isOwner(userId);
+    }
+  }
+}

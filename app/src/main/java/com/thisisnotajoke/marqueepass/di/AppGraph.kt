@@ -1,8 +1,8 @@
 package com.thisisnotajoke.marqueepass.di
 
 import android.content.Context
-import com.thisisnotajoke.marqueepass.data.AppDatabase
-import com.thisisnotajoke.marqueepass.data.ShowDao
+import com.google.firebase.firestore.FirebaseFirestore
+import com.thisisnotajoke.marqueepass.data.ShowRepository
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
@@ -17,13 +17,8 @@ interface AppGraph {
     }
 
     @Provides
-    fun provideAppDatabase(context: Context): AppDatabase {
-        return AppDatabase.getDatabase(context)
-    }
-
-    @Provides
-    fun provideShowDao(appDatabase: AppDatabase): ShowDao {
-        return appDatabase.showDao()
+    fun provideFirestore(): FirebaseFirestore {
+        return FirebaseFirestore.getInstance()
     }
 
     @Provides

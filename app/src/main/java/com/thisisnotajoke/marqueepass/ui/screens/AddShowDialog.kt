@@ -235,7 +235,7 @@ fun AddShowDialog(
                             if (title.isNotBlank()) {
                                 onConfirm(
                                     Show(
-                                        id = initialShow?.id ?: 0,
+                                        id = initialShow?.id ?: "",
                                         title = title,
                                         theater = theater,
                                         date = if ((initialShow?.status ?: status) == ShowStatus.SEEN) datePickerState.selectedDateMillis else null,
