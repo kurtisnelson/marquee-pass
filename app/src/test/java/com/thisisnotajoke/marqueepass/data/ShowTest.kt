@@ -6,14 +6,14 @@ import org.junit.Test
 class ShowTest {
 
     @Test
-    fun `default show has zero ID`() {
+    fun `default show has empty ID`() {
         val show = Show(title = "Hamilton")
-        assertEquals(0L, show.id)
+        assertEquals("", show.id)
     }
 
     @Test
     fun `show with explicit ID retains it`() {
-        val id = System.currentTimeMillis()
+        val id = System.currentTimeMillis().toString()
         val show = Show(id = id, title = "Wicked")
         assertEquals(id, show.id)
     }
@@ -27,7 +27,7 @@ class ShowTest {
     @Test
     fun `copy preserves all fields`() {
         val original = Show(
-            id = 123L,
+            id = "123",
             title = "Hadestown",
             theater = "Walter Kerr Theatre",
             date = 1700000000000L,
@@ -41,16 +41,16 @@ class ShowTest {
 
     @Test
     fun `copy with new ID does not mutate original`() {
-        val original = Show(id = 100L, title = "Hamilton")
-        val copy = original.copy(id = 200L)
-        assertEquals(100L, original.id)
-        assertEquals(200L, copy.id)
+        val original = Show(id = "100", title = "Hamilton")
+        val copy = original.copy(id = "200")
+        assertEquals("100", original.id)
+        assertEquals("200", copy.id)
         assertEquals(original.title, copy.title)
     }
 
     @Test
     fun `copy with status change clears rating`() {
-        val seen = Show(id = 1L, title = "Test", status = ShowStatus.SEEN, rating = 4)
+        val seen = Show(id = "1", title = "Test", status = ShowStatus.SEEN, rating = 4)
         val wishlist = seen.copy(status = ShowStatus.WANT_TO_SEE, rating = null)
         assertNull(wishlist.rating)
         assertEquals(ShowStatus.WANT_TO_SEE, wishlist.status)
@@ -67,9 +67,9 @@ class ShowTest {
 
     @Test
     fun `show equality is based on all fields`() {
-        val a = Show(id = 1L, title = "A", status = ShowStatus.SEEN)
-        val b = Show(id = 1L, title = "A", status = ShowStatus.SEEN)
-        val c = Show(id = 1L, title = "A", status = ShowStatus.WANT_TO_SEE)
+        val a = Show(id = "1", title = "A", status = ShowStatus.SEEN)
+        val b = Show(id = "1", title = "A", status = ShowStatus.SEEN)
+        val c = Show(id = "1", title = "A", status = ShowStatus.WANT_TO_SEE)
         assertEquals(a, b)
         assertNotEquals(a, c)
     }
@@ -84,14 +84,14 @@ class ShowTest {
 
     @Test
     fun `millisecond IDs are positive and large`() {
-        val id = System.currentTimeMillis()
-        assertTrue("ID should be positive", id > 0)
-        assertTrue("ID should be larger than Int.MAX_VALUE to validate Long is needed", id > Int.MAX_VALUE.toLong())
+        val id = System.currentTimeMillis().toString()
+        assertTrue("ID should be positive", id.toLong() > 0)
+        assertTrue("ID should be larger than Int.MAX_VALUE to validate Long is needed", id.toLong() > Int.MAX_VALUE.toLong())
     }
 
     @Test
     fun `sequential millisecond IDs are unique`() {
-        val ids = (0 until 100).map { System.currentTimeMillis() + it }
+        val ids = (0 until 100).map { (System.currentTimeMillis() + it).toString() }
         assertEquals("All IDs should be unique", ids.size, ids.toSet().size)
     }
 
@@ -99,7 +99,7 @@ class ShowTest {
     fun `rating must be between 1 and 5 by convention`() {
         // The database rules enforce 1-5, verify the data class allows it
         for (r in 1..5) {
-            val show = Show(id = 1L, title = "T", status = ShowStatus.SEEN, rating = r)
+            val show = Show(id = "1", title = "T", status = ShowStatus.SEEN, rating = r)
             assertEquals(r, show.rating)
         }
     }
